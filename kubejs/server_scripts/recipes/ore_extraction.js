@@ -122,12 +122,18 @@ function specific_cases(event){
 	
 	//#region Invar
 	event.remove({id: 'tconstruct:smeltery/melting/metal/invar/dust'})
+	event.remove({id:'thermal:fire_charge/invar_ingot_3'})
+	event.remove({id:'thermal:invar_dust_3'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_invar', 30), ['2x thermal:iron_dust', 'thermal:nickel_dust']).heated()
 	melting(event, 'thermal:invar_dust', 'invar', 10, 900, 60/9)
 	crushing_ingots(event, 'invar', 'thermal')
 	//#endregion
 
 	//#region Constantan
 	event.remove({id: 'tconstruct:smeltery/melting/metal/constantan/dust'})
+	event.remove({id:'thermal:fire_charge/constantan_ingot_2'})
+	event.remove({id:'thermal:constantan_dust_2'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_constantan', 20), ['1x thermal:copper_dust', 'thermal:nickel_dust']).heated()
 	melting(event, 'thermal:constantan_dust', 'constantan', 10, 920, 64/9)
 	crushing_ingots(event, 'constantan', 'thermal')
 	//#endregion
@@ -137,15 +143,7 @@ function specific_cases(event){
 	event.recipes.create.crushing('thermal:ender_pearl_dust', 'minecraft:ender_pearl')
 	event.recipes.create.milling(['thermal:ender_pearl_dust', Item.of('thermal:ender_pearl_dust').withChance(0.25)], 'minecraft:ender_pearl')
 
-	event.shaped('6x thermal:enderium_dust', 
-		[
-			'LLL',
-			'DEE'
-		],{
-			L: 'thermal:lead_dust',
-			D: 'thermal:diamond_dust',
-			E: 'thermal:ender_pearl_dust'
-		})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_enderium', 60), ['3x thermal:lead_dust', 'thermal:diamond_dust', '2x thermal:ender_pearl_dust']).superheated()
 	event.remove({id: 'tconstruct:smeltery/melting/metal/enderium/dust'})
 	melting(event, 'thermal:enderium_dust', 'enderium', 10, 1350, 76/9)
 	crushing_ingots(event, 'enderium', 'thermal')
@@ -153,24 +151,36 @@ function specific_cases(event){
 
 	//#region Bronze
 	event.remove({id: 'tconstruct:smeltery/melting/metal/bronze/dust'})
+	event.remove({id:'thermal:fire_charge/bronze_ingot_4'})
+	event.remove({id:'thermal:bronze_dust_4'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_bronze', 40), ['3x thermal:copper_dust', 'thermal:tin_dust']).heated()
 	melting(event, 'thermal:bronze_dust', 'bronze', 10, 700, 56/9)
 	crushing_ingots(event, 'bronze', 'thermal')
 	//#endregion
 
 	//#region Signalum
 	event.remove({id: 'tconstruct:smeltery/melting/metal/signalum/dust'})
+	event.remove({id:'thermal:fire_charge/signalum_ingot_4'})
+	event.remove({id:'thermal:signalum_dust_4'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_signalum', 40), ['3x thermal:copper_dust', 'thermal:silver_dust', '4x minecraft:redstone']).superheated()
 	melting(event, 'thermal:signalum_dust', 'signalum', 10, 1125, 68/9)
 	crushing_ingots(event, 'signalum', 'thermal')
 	//#endregion
 
 	//#region Electrum
 	event.remove({id: 'tconstruct:smeltery/melting/metal/electrum/dust'})
+	event.remove({id:'thermal:fire_charge/electrum_ingot_2'})
+	event.remove({id:'thermal:electrum_dust_2'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_electrum', 20), ['1x thermal:gold_dust', 'thermal:silver_dust']).heated()
 	melting(event, 'thermal:electrum_dust', 'electrum', 10, 760, 56/9)
 	crushing_ingots(event, 'electrum', 'thermal')
 	//#endregion
 
 	//#region Lumium
 	event.remove({id: 'tconstruct:smeltery/melting/metal/lumium/dust'})
+	event.remove({id:'thermal:fire_charge/lumium_ingot_4'})
+	event.remove({id:'thermal:lumium_dust_4'})
+	event.recipes.create.mixing(Fluid.of('tconstruct:molten_lumium', 40), ['3x thermal:tin_dust', 'thermal:silver_dust', '2x minecraft:glowstone_dust']).superheated()
 	melting(event, 'thermal:lumium_dust', 'lumium', 10, 1050, 68/9)
 	crushing_ingots(event, 'lumium', 'thermal')
 	//#endregion
@@ -210,6 +220,8 @@ function specific_cases(event){
 	
 	//#endregion
 	//#endregion
+
+	
 }
 
 function crushing_ingots(event, ore, mod){
@@ -229,10 +241,96 @@ function crushing_ingots(event, ore, mod){
 	event.recipes.create.milling([amount+'x '+dust, Item.of(dust).withChance(0.50)], ingot)
 }
 
+function melting_spec(event, input, output, amount, temperature, time) {
+	event.custom({
+		type: 'tconstruct:melting',
+		ingredient: {
+			item: input
+		},
+		result: {
+			fluid: 'kubejs:molten_'+output,
+			amount: amount
+		},
+		temperature: temperature,
+		time: time
+	});
+}
+
+function casting_table(event, cast, cooling_time, fluid_amount, fluid_id, result) {
+	event.custom({
+		type: 'tconstruct:casting_table',
+		cast: { tag: 'tconstruct:casts/multi_use/'+cast},
+		cooling_time: cooling_time,
+		fluid: {
+			amount: fluid_amount,
+			fluid: fluid_id
+		},
+		result: result
+	})
+	event.custom({
+		type: 'tconstruct:casting_table',
+		cast: { tag: 'tconstruct:casts/single_use/'+cast},
+		cast_consumed: true,
+		cooling_time: cooling_time,
+		fluid: {
+			amount: fluid_amount,
+			fluid: fluid_id
+		},
+		result: result
+	})
+}
+
+function casting_basin(event, cooling_time, fluid_amount, fluid_id, result) {
+	event.custom({
+		type: 'tconstruct:casting_basin',
+		cooling_time: cooling_time,
+		fluid: {
+			amount: fluid_amount,
+			fluid: fluid_id
+		},
+		result: result
+	})
+}
+
+function prcoess_ad_astra(event) {
+
+	let ores = [
+		['calorite', 1350, 100, 'minecraft:blaze_powder'],
+		['ostrum', 1050, 88, 'create:cinder_flour'],
+		['desh', 950, 72, 'minecraft:glowstone_dust']
+	]
+
+	ores.forEach(elem => {
+		//remove recipes
+		event.remove({id:'create:splashing/crushed_'+elem[0]+'_ore'})
+
+		//melting
+		melting_spec(event, 'ad_astra:raw_'+elem[0], elem[0],  45, elem[1], elem[2])
+		melting_spec(event, 'createastracompat:crushed_'+elem[0]+'_ore', elem[0],  20, elem[1], elem[2]/3)
+		melting_spec(event, 'kubejs:'+elem[0]+'_dust', elem[0],  10, elem[1], elem[2]/9)
+		melting_spec(event, 'ad_astra:'+elem[0]+'_ingot', elem[0], 90, elem[1], elem[2])
+
+		//crushing
+		event.recipes.create.crushing('3x createastracompat:crushed_'+elem[0]+'_ore', 'ad_astra:raw_'+elem[0])
+		event.recipes.create.crushing(['2x kubejs:'+elem[0]+'_dust', Item.of(elem[3]).withChance(0.25)], 'createastracompat:crushed_'+elem[0]+'_ore')
+		// milling
+		event.recipes.create.milling(['5x kubejs:'+elem[0]+'_dust', Item.of('kubejs:'+elem[0]+'_dust').withChance(0.95), Item.of('kubejs:'+elem[0]+'_dust').withChance(0.25)], 'ad_astra:raw_'+elem[0])
+		event.recipes.create.milling(['2x kubejs:'+elem[0]+'_dust', Item.of('kubejs:'+elem[0]+'_dust').withChance(0.95)], 'createastracompat:crushed_'+elem[0]+'_ore')
+
+		//cast
+		casting_table(event, 'nugget', elem[2]/9, 10, 'kubejs:molten_'+elem[0], 'ad_astra:'+elem[0]+'_nugget')
+		casting_table(event, 'ingot', elem[2]/2, 90, 'kubejs:molten_'+elem[0], 'ad_astra:'+elem[0]+'_ingot')
+		casting_table(event, 'plate', elem[2]/4, 90, 'kubejs:molten_'+elem[0], 'ad_astra:'+elem[0]+'_plate')
+
+		casting_basin(event, elem[2], 810, 'kubejs:molten_'+elem[0], 'ad_astra:'+elem[0]+'_block')
+	})
+	
+}
+
 ServerEvents.recipes(event => {
 	
 	event.remove({input: '#forge:ores'})
-	event.remove({output:'#create:crushed_raw_materials'})
+	event.remove([{output:'#create:crushed_raw_materials', input:'#forge:raw_materials'}, {output:'#create:crushed_raw_materials', input:'#forge:storage_blocks'} ])
 	let ores = [ // [0 = Ore] [1 = mod] [2 = Residue] [3 = MeltingTemp] [4 = MeltingTime]
 		['iron', 'minecraft', 'minecraft:redstone', 800, 88],
 		['copper', 'minecraft', 'minecraft:clay_ball', 500, 72],
@@ -252,5 +350,6 @@ ServerEvents.recipes(event => {
 	});
 
 	process_diamond_ore(event)
+	prcoess_ad_astra(event)
 	specific_cases(event)
 })
